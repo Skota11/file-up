@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja"></html>
+<head>
+    <meta charset="UTF-8">
+    <title>File Upload</title>
+</head>
+<body>
+    <h1>FileUpload</h1>
+  <p id="imagepath"></p>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+
+            <div contenteditable="true" width="50%" height="50px">
+paste image here<br>Paste<br>Paste
+</div>
+              <input type="file" name="file">
+        <button type="submit">アップロード</button>
+    </form>
+  <script>
+    var element =  document.querySelector("[contenteditable]");
+
+// chrome向け
+element.addEventListener("paste", function(e){
+	// 画像の場合
+	// e.clipboardData.types.length == 0
+	// かつ
+	// e.clipboardData.types[0] == "Files"
+	// となっているので、それ以外を弾く
+	if (!e.clipboardData 
+			|| !e.clipboardData.types
+			|| (e.clipboardData.types.length != 1)
+			|| (e.clipboardData.types[0] != "Files")) {
+			return true;
+	}
+	
+	// ファイルとして得る
+	// (なぜかgetAsStringでは上手くいかなかった)
+	var imageFile = e.clipboardData.items[0].getAsFile();
+
+  const formData = new FormData();
+    formData.append("file", imageFile);
+
+  const param = {
+      method: "POST",
+      body: formData
+    }
+  fetch("/upload", param)
+  .then((res)=>{
+        return(res.text())
+      }).then((text) => {console.log(text)
+                        document.getElementById("imagepath").innerHTML = text;
+                        navigator.clipboard.writeText(text);
+                        })
+	// FileReaderで読み込む
+	// var fr = new FileReader();
+ //    fr.onload = function(e) {
+ //    	// onload内ではe.target.resultにbase64が入っているのであとは煮るなり焼くなり
+	// 	var base64 = e.target.result;
+	// 	document.querySelector("#outputImage").src = base64;
+ //        document.querySelector("#outputText").textContent = base64;
+	// };
+	// fr.readAsDataURL(imageFile);
+	
+	// // 画像以外がペーストされたときのために、元に戻しておく
+	element.innerHTML = "paste image here";
+});
+  </script>
+</body>
+</html>
